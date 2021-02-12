@@ -12,7 +12,7 @@ DIRECTORY="$HOME/notebooks"
 READING=false
 NUMLINES=5
 
-usage () { echo "Usage: notes [-b <notebook name>] [-d <path/to/directory>] [-v] <note>"; exit 1; }
+usage () { echo "Usage: notes [-b <notebook name>] [-d <path/to/directory>] [-r] [-n <number of lines>]<note>"; exit 1; }
 
 # b - check without arguments
 # b: - check with arguments
@@ -32,7 +32,7 @@ while getopts "b:d:rn:" opt; do
       READING=true
       ;;
     n )
-      # Set number of lines to read
+      # Set number of lines to read. only does something when READING
       NUMLINES=$OPTARG
       ;;
     \? ) 
