@@ -1,16 +1,29 @@
 #!/bin/bash
 
-# Eventually pull from config file
-# Config should have a notebook directory
-# Config should have a default notebook
-# Maybe config can define whether you are viewing by line count or day count
+CONFIGFILE="./notes.conf"
 
-CONFIG=""
+typeset -A config
+config=(
+  [default_notebook]="default"
+  [default_directory]="$HOME/notebooks"
+  [lines_to_read]=5
+  [reading_style]="line"
+)
 
-NOTEBOOK="default"
-DIRECTORY="$HOME/notebooks"
+while read line
+do
+  if echo $line | grep -F = &>/dev/null
+  then
+    varname=$(echo "$line" | cut -d '=' -f 1)
+    config[$varname]=$(echo "$line" | cut -d '=' -f 2-)
+  fi
+done < $CONFIGFILE
+
+NOTEBOOK=${config[default_notebook]}
+DIRECTORY=${config[default_directory]}
+NUMLINES=${config[lines_to_read]}
+READINGSTYLE=${config[reading_style]}
 READING=false
-NUMLINES=5
 
 usage () { echo "Usage: notes [-b <notebook name>] [-d <path/to/directory>] [-r] [-n <number of lines>]<note>"; exit 1; }
 
@@ -45,11 +58,6 @@ shift "$((OPTIND-1))"
 NOTE=$1
 
 FILE="$DIRECTORY/$NOTEBOOK"
-
-#DEBUG
-#echo "$NOTEBOOK"
-#echo "$DIRECTORY"
-#echo "$READING"
 
 # If Reading (-r), list the contents of the Notebook and exit
 # Prints out all contents of the notebook (maybe an line count flag/argument) separated by date
