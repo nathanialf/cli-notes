@@ -4,10 +4,10 @@ CONFIGFILE="./notes.conf"
 
 typeset -A config
 config=(
-  [default_notebook]="default"
-  [default_directory]="$HOME/notebooks"
+  [default_notebook]=default
+  [default_directory]=$HOME/notebooks
   [lines_to_read]=5
-  [reading_style]="line"
+  [reading_style]=line
 )
 
 while read line
@@ -25,14 +25,14 @@ NUMLINES=${config[lines_to_read]}
 READINGSTYLE=${config[reading_style]}
 READING=false
 
-usage () { echo "Usage: notes [-b <notebook name>] [-d <path/to/directory>] [-r] [-n <number of lines>]<note>"; exit 1; }
+usage () { echo "Usage: notes [-b <notebook name>] [-d <path/to/directory>] [-r] [-n <number of lines>] [-t <line|date>] <note>"; exit 1; }
 
 # b - check without arguments
 # b: - check with arguments
 # :b - silences errors for unsupported options
-while getopts "b:d:rn:" opt; do
+while getopts "b:d:rn:t:" opt; do
   case ${opt} in
-    b ) 
+    b )
       # Get next argument and set NOTEBOOK to its value
       NOTEBOOK=$OPTARG
       ;;
@@ -40,7 +40,7 @@ while getopts "b:d:rn:" opt; do
       # Get next argument and set DIRECTORY to its value
       DIRECTORY=$OPTARG
       ;;
-    r ) 
+    r )
       # View the contents of the notebook
       READING=true
       ;;
@@ -48,7 +48,11 @@ while getopts "b:d:rn:" opt; do
       # Set number of lines to read. only does something when READING
       NUMLINES=$OPTARG
       ;;
-    \? ) 
+    t )
+      # Set Reading Style. only does something when READING
+      READINGSTYLE=$OPTARG
+      ;;
+    \? )
       usage
       ;;
   esac
@@ -63,26 +67,40 @@ FILE="$DIRECTORY/$NOTEBOOK"
 # Prints out all contents of the notebook (maybe an line count flag/argument) separated by date
 
 if [ "$READING" = true ]; then
-  #cat $FILE
-  
-  # grab the last X lines and print out
-  # FRI Feb 12
-  #  - test
-  #  - Testt2
-  # SAT Feb 13
-  #  - Random Note
-  
-  OLD=""
-  tail -n $NUMLINES $FILE | while read line
-  do
-    CURRENT=$(echo $line | awk 'BEGIN{FS=";"} { print $1 }' | awk '{print $1, $2, $3, $4}')
-    if [[ $CURRENT != $OLD ]]; then
-      OLD=$CURRENT
-      echo $CURRENT
-    fi
-    echo $line | awk 'BEGIN{FS=";"} { print " - ", $2 }'
-  done
-  exit 0
+  # READINGSTYLE = LINE
+  if [ "$READINGSTYLE" = "line" ]; then
+    OLD=""
+    tail -n $NUMLINES $FILE | while read line
+    do
+      # Prints new date when it comes to one
+      CURRENT=$(echo $line | awk 'BEGIN{FS=";"} { print $1 }' | awk '{print $1, $2, $3, $4}')
+      if [[ $CURRENT != $OLD ]]; then
+        OLD=$CURRENT
+        echo $CURRENT
+      fi
+      echo $line | awk 'BEGIN{FS=";"} { print "- ", $2 }'
+    done
+    exit 0
+
+  # READINGSTYLE = DATE
+  elif [ "$READINGSTYLE" = "date" ]; then
+    OLD=""
+    COUNTER=0
+    tac $FILE | while read line
+    do
+      CURRENT=$(echo $line | awk 'BEGIN{FS=";"} { print $1 }' | awk '{print $1, $2, $3, $4}')
+      if [[ $CURRENT != $OLD ]]; then
+        OLD=$CURRENT
+        echo $CURRENT
+        ((COUNTER=COUNTER+1))
+      fi
+      echo $line | awk 'BEGIN{FS=";"} { print "- ", $2 }'
+      if [ $COUNTER = $NUMLINES ]; then
+        break
+      fi
+    done
+    exit 0
+  fi
 fi
 
 # Create a new notebook if it doesnt exist in the notebook directory
