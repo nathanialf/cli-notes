@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONFIGFILE="./notes.conf"
+CONFIGFILE="~/notes.conf"
 
 typeset -A config
 config=(
@@ -25,7 +25,7 @@ NUMLINES=${config[lines_to_read]}
 READINGSTYLE=${config[reading_style]}
 READING=false
 
-usage () { echo "Usage: notes [-b <notebook name>] [-d <path/to/directory>] [-r] [-n <number of lines>] [-t <line|date>] <note>"; exit 1; }
+usage () { echo "Usage: notes [-b <notebook name>] [-d <path/to/notebook-dir>] <note | -r [-n <number of lines>] [-t <line|date>]>"; exit 1; }
 
 # b - check without arguments
 # b: - check with arguments
